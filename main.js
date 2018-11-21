@@ -2,18 +2,33 @@ function printReceipt(inputBarcodes){
 	let receipt = '';
 	let allItems = loadAllItems();
 	let promotions = loadPromotions();
-	
-	return receipt
+	definePromoteItem(allItems, promotions, inputBarcodes);
+	return receipt;
 }
 
 function definePromoteItem(allItems, promotions, inputBarcodes){
-	let itemBarcode;
+	let itemBarcode = [];
+	for (let index=0; index<inputBarcodes.length;index++){
+		if(promotions.barcodes.includes(inputBarcodes(index)))
+			itemBarcode.push({'barcode': inputBarcodes[index],'isPromo' : true});
+		else
+			itemBarcode.push({'barcode': inputBarcodes[index],'isPromo' : false});
+	}
+	});
 	return itemBarcode;
 }
 
 function createPromoteObj(itemBarcode, loadAllItems){
 	let promoteItemObj;
 	let promoteSavingStr = '';
+	promoteItemObj = loadAllItems.filter( a => {
+		for(let index=0; index<itemBarcode.length;index++)
+			if(itemBarcode[index].barcode===a && itemBarcode[index].isPromo === true)
+				return true;
+			else 
+				return false;
+	});
+	promoteSavingStr = getPromoteStr(promoteItemObj);
 	return promoteSavingStr;
 }
 
@@ -24,10 +39,19 @@ function getPromoteStr(promoteItemObj){
 
 function createNormalObj(itemBarcode, loadAllItems){
 	let normalWeightedStr = '';
+	noPromoteItemObj = loadAllItems.filter( a => {
+		for(let index=0; index<itemBarcode.length;index++)
+			if(itemBarcode[index].barcode===a && itemBarcode[index].isPromo === false)
+				return true;
+			else 
+				return false;
+	});
+	normalAndWeightedObj = findWeighted(noPromoteItemObj,true);
 	return normalWeightedStr;
 }
 
-function findWeighted(noPromoteItemObj){
+function findWeighted(noPromoteItemObj, findWeighted){
+	
 	return normalAndWeightedObj;
 }
 
