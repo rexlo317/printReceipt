@@ -76,7 +76,7 @@ function createNormalObj(itemBarcode, loadAllItems, getWeightedStr, getNormalStr
 	let normalWeightedStr = '';
 	noPromoteItemObj = loadAllItems.filter( a => {
 		for(let index=0; index<itemBarcode.length;index++)
-			if(itemBarcode[index].barcode===a && itemBarcode[index].isPromo === false)
+			if((itemBarcode[index].barcode===a || itemBarcode[index].barcode.split('-')[0]===a) && itemBarcode[index].isPromo === false)
 				return true;
 			else 
 				return false;
