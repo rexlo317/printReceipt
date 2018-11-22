@@ -3,94 +3,103 @@ function printReceipt(inputBarcodes){
 	let allItems = loadAllItems();
 	let promotions = loadPromotions();
 	let itemBarcode = definePromoteItem(allItems, promotions, inputBarcodes);
-	receipt += createPromoteObj(itemBarcode, allItems, false, false);
-	receipt += createNormalObj(itemBarcode, allItems, false, true, false, false);
-	receipt += createNormalObj(itemBarcode, allItems, true, false, false, false);
-	receipt += '**************************************' + '\n';
-	receipt += 'Total Price: ' + createPromoteObj(itemBarcode, allItems, false, true) + createNormalObj(itemBarcode, allItems, false, false, true, false) + createNormalObj(itemBarcode, allItems, false, false, false, true) + ' dollars' + '\n';
-	receipt += 'Saved: ' +  createNormalObj(itemBarcode, allItems, false, false, true, false) + '\n';
+	let promoteStr = [];
+	let normalStr = [];
+	promoteStr = createPromoteObj(itemBarcode, allItems); 
+	normalStr = createNormalObj(itemBarcode, allItems);
+	receipt += promoteStr[2];
+	receipt += normalStr[3];
+	receipt += normalStr[2];
+	receipt += '-----------------------------------' + '\n';
+	let totalPrice = (promoteStr[0] +  normalStr[0] +  normalStr[1]).toFixed(2);
+	receipt += 'Total Price: ' + totalPrice + ' dollars' + '\n';
+	receipt += 'Saved: ' +  promoteStr[1] + ' dollars' + '\n';
+	receipt += '***********************************' + '\n';
 	return receipt;
 }
 
 function definePromoteItem(allItems, promotions, inputBarcodes){
 	let itemBarcode = [];
 	for (let index=0; index<inputBarcodes.length;index++){
-		if(promotions.barcodes.includes(inputBarcodes(index)))
+		if(promotions[0].barcodes.includes(inputBarcodes[index]))
 			itemBarcode.push({'barcode': inputBarcodes[index],'isPromo' : true});
 		else 
 			itemBarcode.push({'barcode': inputBarcodes[index],'isPromo' : false});
 	}
-	});
 	return itemBarcode;
 }
 
-function createPromoteObj(itemBarcode, loadAllItems, findSaving, getTotal){
+function createPromoteObj(itemBarcode, loadAllItems){
 	let promoteItemObj = [];
 	let promoteStr = '';
-	let savingStr = '';
 	let totalPrice;
+	let promoteSavingStr = [];
 	promoteItemObj = loadAllItems.filter( a => {
 		for(let index=0; index<itemBarcode.length;index++)
-			if(itemBarcode[index].barcode===a && itemBarcode[index].isPromo === true)
+			if(itemBarcode[index].barcode===a.barcode && itemBarcode[index].isPromo === true){
 				return true;
-			else 
-				return false;
+			} 
+		return false;
 	});
-	if (findSaving)
-		return getPromoteStr(promoteItemObj, findSaving, getTotal);
-	else if (getTotal)
-		return getPromoteStr(promoteItemObj, findSaving, getTotal);
-	else	
-		return promoteSavingStr;
+	return getPromoteStr(promoteItemObj, itemBarcode);
 }
 
-function getPromoteStr(promoteItemObj, findSaving, getTotal){
+function getPromoteStr(promoteItemObj, itemBarcode){
 	let promoteSavingStr = '';
 	let countPromoteItemObj = [];
 	let saved = 0;
 	let total = 0;
-	for (let index; index<promoteItemObj.length; index++){
+	let promoteSavingArray = [];
+	for (let index = 0; index<promoteItemObj.length; index++){
 		let count = 0;
-		for (let counter; counter<promoteItemObj.length; counter++){
-			if (promoteItemObj[count] === promoteItemObj[counter])
+		for (let counter=0; counter<itemBarcode.length; counter++){
+			if (promoteItemObj[index].barcode === itemBarcode[counter].barcode)
 				count++;
 		}
-		if (count / 3 >== 1){
+		if (count >= 3){
 			saved += count/3 * promoteItemObj[index].price;
 			total += (count-count/3) * promoteItemObj[index].price;
 		}else{
 			saved = 0;
 			total += count * promoteItemObj[index].price;
 		}
-		promoteSavingStr += 'Name: ' + promoteItemObj[index].name + ', number: ' + count + ' ' + promoteItemObj[index].unit + ', price: ' + promoteItemObj[index].price + '. Total: ' + promoteItemObj[index].price * (count-count/3) ' dollar.\n';
-	}
-	if (getTotal)
-		return total;
-	if (findSaving)
-		return saved;
-	else
-		return promoteSavingStr;
+		let secondLastChar = promoteItemObj[index].unit.charAt(promoteItemObj[index].unit.length-2);
+		if (count === 1)
+			promoteSavingStr += 'Name: ' + promoteItemObj[index].name + ', number: ' + count + ' ' + promoteItemObj[index].unit + ', price: ' + promoteItemObj[index].price.toFixed(2) + '. Total: ' + (count>=3?(promoteItemObj[index].price * (count-count/3)).toFixed(2):promoteItemObj[index].price*count).toFixed(2) + ' dollars.\n';
+		else if (secondLastChar === 'a' || secondLastChar === 'e' || secondLastChar === 'i' || secondLastChar === 'o' || secondLastChar === 'u'){
+			promoteSavingStr += 'Name: ' + promoteItemObj[index].name + ', number: ' + count + ' ' + promoteItemObj[index].unit + 'es, price: ' + promoteItemObj[index].price.toFixed(2) + '. Total: ' + (count>=3?(promoteItemObj[index].price * (count-count/3)).toFixed(2):promoteItemObj[index].price*count).toFixed(2) + ' dollars.\n';
+			console.log(promoteItemObj[index].unit);
+		}else
+			promoteSavingStr += 'Name: ' + promoteItemObj[index].name + ', number: ' + count + ' ' + promoteItemObj[index].unit + 's, price: ' + promoteItemObj[index].price.toFixed(2) + '. Total: ' + (count>=3?(promoteItemObj[index].price * (count-count/3)).toFixed(2):promoteItemObj[index].price*count).toFixed(2) + ' dollars.\n';
+		}
+	promoteSavingArray[0] = total;
+	promoteSavingArray[1] = saved;
+	promoteSavingArray[2] = promoteSavingStr;
+	return promoteSavingArray;
 }
 
-function createNormalObj(itemBarcode, loadAllItems, getWeightedStr, getNormalStr, getWeightedTotal, getNormalTotal){
+function createNormalObj(itemBarcode, loadAllItems){
 	let normalWeightedStr = '';
-	noPromoteItemObj = loadAllItems.filter( a => {
+	let normalObjArray = [];
+	let noPromoteItemObj = [];
+	loadAllItems.filter( a => {
 		for(let index=0; index<itemBarcode.length;index++)
-			if((itemBarcode[index].barcode===a || itemBarcode[index].barcode.split('-')[0]===a) && itemBarcode[index].isPromo === false)
-				return true;
-			else 
-				return false;
+			if(itemBarcode[index].barcode===a.barcode || itemBarcode[index].barcode.split('-')[0]===a.barcode) 
+				if(itemBarcode[index].isPromo === false){
+					a.barcode = itemBarcode[index].barcode;
+					if (!noPromoteItemObj.includes(a))
+						noPromoteItemObj.push(a);
+				}
+		return false;
 	});
 	WeightedObj = findWeighted(noPromoteItemObj,true);
 	normalObj = findWeighted(noPromoteItemObj,false);
-	if (getWeightedStr)
-		return getWeightedStr(WeightedObj, getWeightedTotal);
-	else if (getNormalStr)
-		return getNormalStr(normalObj, getNormalTotal
-	else if (getWeightedTotal)
-		return getWeightedStr(WeightedObj, getWeightedTotal);
-	else if (getNormalTotal)
-		return getNormalStr(normalObj, getNormalTotal);
+	normalObjArray[0] = getWeightedStr(WeightedObj, true, itemBarcode);
+	normalObjArray[1] = getNormalStr(normalObj, true, itemBarcode);
+	normalObjArray[2] = getWeightedStr(WeightedObj, false, itemBarcode);
+	normalObjArray[3] = getNormalStr(normalObj, false, itemBarcode);
+	
+	return normalObjArray;
 }
 
 function findWeighted(noPromoteItemObj, findWeighted){
@@ -98,41 +107,48 @@ function findWeighted(noPromoteItemObj, findWeighted){
 	let normalObj = [];
 	if (findWeighted) {	
 		WeightedObj = noPromoteItemObj.filter( a => {
-			a.barcode.contains('-');
+			return a.barcode.includes('-');
 		});
 		return WeightedObj;
 	}else{
 		normalObj = noPromoteItemObj.filter( a => {
-			!a.barcode.contains('-');
-		}
+			return !a.barcode.includes('-');
+		});
 		return normalObj;
 	}
 }
 
-function getWeightedStr(WeightedObj, getTotal){
+function getWeightedStr(WeightedObj, getTotal, itemBarcode){
 	let weightedItemStr = '';
-	for (let index; index<WeightedObj.length; index++){
-		let count = WeightedObj[index].split('-')[1];
+	let total = 0;
+	for (let index=0; index<WeightedObj.length; index++){
+		let count = parseFloat(WeightedObj[index].barcode.split('-')[1]);
 		total += WeightedObj[index].price * count;
-		weightedItemStr += 'Name: ' + WeightedObj[index].name + ', number: ' + count + ' ' + WeightedObj[index].unit + ', price: ' + WeightedObj[index].price + '. Total: ' + WeightedObj[index].price * count ' dollar.\n';
-	}
+		weightedItemStr += 'Name: ' + WeightedObj[index].name + ', number: ' + count + ' ' + WeightedObj[index].unit + ', price: ' + WeightedObj[index].price.toFixed(2) + '. Total: ' + (WeightedObj[index].price * count).toFixed(2) + ' dollars.\n';
+		}
 	if (getTotal)
 		return total;
 	else
 		return weightedItemStr;
 }
 
-function getNormalStr(normalObj, getTotal){
+function getNormalStr(normalObj, getTotal, itemBarcode){
 	let normalItemStr = '';
 	let total = 0;
-	for (let index; index<normalObj.length; index++){
+	for (let index=0; index<normalObj.length; index++){
 		let count = 0;
-		for (let counter; counter<normalObj.length; counter++){
-			if (normalObj[count] === normalObj[counter])
+		for (let counter=0; counter<itemBarcode.length; counter++){
+			if (normalObj[index].barcode === itemBarcode[counter].barcode)
 				count++;
 		}
 		total += normalObj[index].price * count;
-		normalItemStr += 'Name: ' + normalObj[index].name + ', number: ' + count + ' ' + normalObj[index].unit + ', price: ' + normalObj[index].price + '. Total: ' + normalObj[index].price * count ' dollar.\n';
+		let secondLastChar = normalObj[index].unit.charAt(normalObj[index].unit.length-2);
+		if (count === 1)
+			normalItemStr += 'Name: ' + normalObj[index].name + ', number: ' + count + ' ' + normalObj[index].unit + ', price: ' + normalObj[index].price.toFixed(2) + '. Total: ' + (normalObj[index].price * count).toFixed(2) + ' dollars.\n';
+		else if (secondLastChar === 'a' || secondLastChar === 'e' || secondLastChar === 'i' || secondLastChar === 'o' || secondLastChar === 'u')
+			normalItemStr += 'Name: ' + normalObj[index].name + ', number: ' + count + ' ' + normalObj[index].unit + 'es, price: ' + normalObj[index].price.toFixed(2) + '. Total: ' + (normalObj[index].price * count).toFixed(2) + ' dollars.\n';
+		else
+			normalItemStr += 'Name: ' + normalObj[index].name + ', number: ' + count + ' ' + normalObj[index].unit + 's, price: ' + normalObj[index].price.toFixed(2) + '. Total: ' + (normalObj[index].price * count).toFixed(2) + ' dollars.\n';
 	}
 	if (getTotal)
 		return total;
